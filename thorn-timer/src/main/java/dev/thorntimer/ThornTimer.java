@@ -8,7 +8,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.ChatFormatting;
 
@@ -86,15 +85,25 @@ public class ThornTimer implements ClientModInitializer {
     }
 
     private static void showThrow(Minecraft mc) {
-        mc.gui.setTimes(TITLE_FADE_IN, TITLE_STAY, TITLE_FADE_OUT);
-        mc.gui.setSubtitle(Component.empty());
-        mc.gui.setTitle(Component.literal("THROW").withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
+        // The big "THROW" text is drawn by the HUD renderer below.
+    }
+
+    private static void drawCentered(GuiGraphicsExtractor graphics, Minecraft mc,
+                                     String label, float scale, float centerY, int color) {
+        int width = mc.font.width(label);
+        float x = (graphics.guiWidth() - width * scale) / 2f;
+        float y = centerY - (mc.font.lineHeight * scale) / 2f;
+
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x, y);
+        graphics.pose().scale(scale, scale);
+        graphics.text(mc.font, label, 0, 0, color, true);
+        graphics.pose().popMatrix();
     }
 
     private static void renderCounter(GuiGraphicsExtractor graphics) {
         if (startTime < 0) return;
         Minecraft mc = Minecraft.getInstance();
-        if (mc.options.hideGui) return;
 
         long rem = remainingMs();
         if (rem < -3_000L) { // hide a few seconds after THROW
@@ -102,28 +111,15 @@ public class ThornTimer implements ClientModInitializer {
             return;
         }
 
-        String label;
-        int color;
+        float centerY = graphics.guiHeight() / 2f;
+
         if (rem > 0) {
-            label = String.format("Thorn: %.1fs", rem / 1000.0);
-            color = rem > 5_000L ? 0xFFFFFFFF : 0xFFFFAA00;
+            String label = String.format("Thorn: %.1fs", rem / 1000.0);
+            int color = rem > 5_000L ? 0xFFFFFFFF : 0xFFFFAA00;
+            drawCentered(graphics, mc, label, 2.0f, centerY + 30f, color);
         } else {
-            label = "Thorn: 0.0s";
-            color = 0xFFFF5555;
+            // Big THROW in the middle of the screen
+            drawCentered(graphics, mc, "THROW", 8.0f, centerY - 20f, 0xFFFF5555);
         }
-
-        // Positioned just below the crosshair, scaled up 2x so it's easy to see.
-        float scale = 2.0f;
-        int width = mc.font.width(label);
-        int screenW = graphics.guiWidth();
-        int screenH = graphics.guiHeight();
-        float x = (screenW - width * scale) / 2f;
-        float y = screenH / 2f + 20f;
-
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(x, y);
-        graphics.pose().scale(scale, scale);
-        graphics.text(mc.font, label, 0, 0, color, true);
-        graphics.pose().popMatrix();
     }
 }

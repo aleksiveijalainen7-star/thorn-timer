@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "thorn-timer",
+  "version": "${version}",
+  "name": "Thorn Timer",
+  "description": "Starts a 17 second countdown when the Thorn boss fight begins in Dungeons F4/M4 and shows THROW when it hits zero.",
+  "authors": ["you"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.thorntimer.ThornTimer"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
